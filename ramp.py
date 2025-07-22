@@ -63,5 +63,5 @@ class Ramp:
             new_vel = ball_vel - 2 * dot_product * normal
 
             # Apply friction
-            ball.vx = new_vel.x * FRICTION * 1.1
+            ball.vx = new_vel.x * FRICTION * 1.15
             ball.vy = new_vel.y * FRICTION

@@ -16,10 +16,10 @@ CONFETTI_COLORS = [
 ]
 
 # --- Game Physics and Parameters ---
-GRAVITY = 0.2
+GRAVITY = 0.13
 FRICTION = 0.85
-BALL_RADIUS = 10
-NUM_BALLS = 6
+BALL_RADIUS = 15
+NUM_BALLS = 9
 
 
 def load_texture(filename, folder='assets'):

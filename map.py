@@ -30,7 +30,7 @@ def get_map_layout():
         is_offset = row % 2 == 1
         for col in range(int(SCREEN_WIDTH / 60)):
             x_pos = col * 60 + (30 if is_offset else 0)
-            if random.random() > 0.15:
+            if random.random() > 0.25:
                 obstacles.append(Obstacle(x_pos, y_pos, 15, 15, color=random.choice(color_palette)))
 
     ramps.append(Ramp(100, 1810, SCREEN_WIDTH, 1790))
