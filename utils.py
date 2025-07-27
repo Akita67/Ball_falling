@@ -19,7 +19,7 @@ CONFETTI_COLORS = [
 GRAVITY = 0.13
 FRICTION = 0.85
 BALL_RADIUS = 15
-NUM_BALLS = 9
+NUM_BALLS = len(os.listdir('skins'))
 
 
 def load_texture(filename, folder='assets'):
