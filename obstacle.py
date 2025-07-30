@@ -15,8 +15,27 @@ class Obstacle:
         """Draw the obstacle with its unique color, adjusted for camera position."""
         draw_rect = self.rect.copy()
         draw_rect.y -= camera_y
-        # Use the obstacle's specific color for drawing.
+
+        # --- Discrete Neon Glow ---
+        # Create a rectangle for the glow, slightly larger than the obstacle
+        glow_rect_inflated = self.rect.inflate(8, 8)
+        glow_rect_inflated.y -= camera_y
+
+        # Create a temporary surface for the glow effect that supports transparency
+        glow_surface = pygame.Surface(glow_rect_inflated.size, pygame.SRCALPHA)
+
+        # Use the obstacle's color for the glow, but with a low alpha for a discrete effect
+        glow_color = (*self.color, 40)  # Low alpha for subtlety
+
+        # Draw the glowing rectangle on the temporary surface
+        pygame.draw.rect(glow_surface, glow_color, glow_surface.get_rect(), border_radius=7)
+
+        # Blit the glow surface to the screen, centered with the obstacle
+        surface.blit(glow_surface, glow_rect_inflated.topleft)
+
+        # Draw the main obstacle rectangle on top of the glow
         pygame.draw.rect(surface, self.color, draw_rect, border_radius=5)
+
 
     def collide_with_ball(self, ball):
         """Check and resolve collision with a ball."""

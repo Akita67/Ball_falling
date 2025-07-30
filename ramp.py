@@ -6,7 +6,7 @@ from utils import OBSTACLE_COLOR, FRICTION
 class Ramp:
     """Represents a static inclined line segment (a ramp)."""
 
-    def __init__(self, x1, y1, x2, y2, thickness=5):
+    def __init__(self, x1, y1, x2, y2, thickness=10):
         self.p1 = pygame.math.Vector2(x1, y1)
         self.p2 = pygame.math.Vector2(x2, y2)
         self.thickness = thickness

@@ -7,7 +7,7 @@ from particle import Particle
 from obstacle import Obstacle
 from ramp import Ramp
 from confetti import Confetti
-from utils import SCREEN_WIDTH, SCREEN_HEIGHT, BLACK, WHITE, load_skins
+from utils import SCREEN_WIDTH, SCREEN_HEIGHT, BLACK, WHITE, load_skins, load_texture
 from map import get_map_layout
 
 # --- Recording Flag ---
@@ -27,7 +27,7 @@ def draw_rankings(surface, balls, font, icon_font):
 
     for i in range(min(3, len(sorted_balls))):
         ball = sorted_balls[i]
-        y_pos = 10 + i * 40
+        y_pos = 50 + i * 40
 
         trophy_text, trophy_color = trophies[i]
         trophy_surface = icon_font.render(trophy_text, True, trophy_color)
@@ -50,6 +50,7 @@ def game_loop():
     # --- Fonts ---
     title_font = pygame.font.Font(None, 74)
     font = pygame.font.Font(None, 50)
+    countdown_font = pygame.font.Font(None, 200) # Font for the countdown
     small_font = pygame.font.Font(None, 24)
     tiny_font = pygame.font.Font(None, 18)
     ranking_font = pygame.font.Font(None, 28)
@@ -65,6 +66,19 @@ def game_loop():
     else:
         print("Recording is disabled.")
 
+    # --- Dynamic Background ---
+    background_img = load_texture('Nebula Blue.png')
+    stars_imgs = [
+        load_texture('Stars Small_1.png'),
+        load_texture('Stars Small_2.png'),
+        load_texture('Stars-Big_1_1_PC.png'),
+        load_texture('Stars-Big_1_2_PC.png')
+    ]
+    bg_y = 0
+    stars_y = [0, 0, 0, 0]
+    star_speeds = [0.1, 0.2, 0.35, 0.5]
+
+
     # --- Game State & Timing ---
     game_state = "intro"
     winner = None
@@ -72,12 +86,14 @@ def game_loop():
     finish_time = 0
     finish_delay = 500
 
-    # --- Intro Screen ---
+    # --- Intro Screen & Countdown---
     intro_start_time = 0
     intro_duration = 3000
     intro_scroll_x = SCREEN_WIDTH
     player_card_width = 120
     player_card_height = 150
+    countdown_start_time = 0
+    countdown_duration = 3000
 
     # --- UI Elements ---
     restart_button_rect = pygame.Rect(SCREEN_WIDTH / 2 - 75, SCREEN_HEIGHT / 2 + 150, 150, 50)
@@ -95,7 +111,8 @@ def game_loop():
         from utils import NUM_BALLS, BALL_RADIUS
         for i in range(NUM_BALLS):
             x_pos = random.randint(BALL_RADIUS, SCREEN_WIDTH - BALL_RADIUS)
-            y_pos = random.randint(-SCREEN_HEIGHT, 0)
+            # Balls now spawn in a tighter cluster at the top of the screen
+            y_pos = random.randint(-SCREEN_HEIGHT // 4, -BALL_RADIUS * 2)
             skin_info = ball_skins[i % len(ball_skins)] if ball_skins else None
             balls.append(Ball(x_pos, y_pos, skin_info))
 
@@ -122,7 +139,8 @@ def game_loop():
                 if game_state == "finished" and restart_button_rect.collidepoint(event.pos):
                     start_race()
                 if game_state == "intro" and skip_button_rect.collidepoint(event.pos):
-                    game_state = "race"
+                    game_state = "countdown"
+                    countdown_start_time = pygame.time.get_ticks()
 
         # --- Game Logic ---
         if game_state == "intro":
@@ -135,6 +153,12 @@ def game_loop():
                 progress = elapsed_time / intro_duration
                 intro_scroll_x = start_pos + (end_pos - start_pos) * progress
             else:
+                game_state = "countdown"
+                countdown_start_time = pygame.time.get_ticks()
+
+        elif game_state == "countdown":
+            elapsed_time = pygame.time.get_ticks() - countdown_start_time
+            if elapsed_time >= countdown_duration:
                 game_state = "race"
 
         elif game_state == "race" or game_state == "finishing":
@@ -167,9 +191,28 @@ def game_loop():
             leader_ball = max(balls, key=lambda b: b.y)
             target_camera_y = leader_ball.y - SCREEN_HEIGHT / 1.5
             camera_y += (target_camera_y - camera_y) * 0.08
+        elif game_state == "countdown": # Keep camera still during countdown
+             leader_ball = max(balls, key=lambda b: b.y)
+             target_camera_y = leader_ball.y - SCREEN_HEIGHT / 1.5
+             camera_y = target_camera_y
 
         # --- Drawing ---
         screen.fill(BLACK)
+
+        # Draw Dynamic Background
+        if background_img:
+            bg_y = -camera_y * 0.1  # Slower scroll for the main background
+            # Tiling the background
+            screen.blit(background_img, (0, bg_y % background_img.get_height() - background_img.get_height()))
+            screen.blit(background_img, (0, bg_y % background_img.get_height()))
+
+        for i, stars_img in enumerate(stars_imgs):
+            if stars_img:
+                stars_y[i] = -camera_y * star_speeds[i]
+                # Tiling the star layers
+                screen.blit(stars_img, (0, stars_y[i] % stars_img.get_height() - stars_img.get_height()))
+                screen.blit(stars_img, (0, stars_y[i] % stars_img.get_height()))
+
 
         if game_state == "intro":
             title_text = title_font.render("The Competitors", True, WHITE)
@@ -186,6 +229,33 @@ def game_loop():
             pygame.draw.rect(screen, (50, 50, 50), skip_button_rect, border_radius=10)
             skip_text = small_font.render("Skip", True, WHITE)
             screen.blit(skip_text, skip_text.get_rect(center=skip_button_rect.center))
+
+        elif game_state == "countdown":
+            # Draw everything in a static position
+            if finish_line_props.get('texture'):
+                scaled_texture = pygame.transform.scale(finish_line_props['texture'],
+                                                        (SCREEN_WIDTH, finish_line_props['height']))
+                screen.blit(scaled_texture, (0, finish_line_props['y'] - camera_y))
+            for ramp in ramps:
+                ramp.draw(screen, camera_y)
+            for obstacle in obstacles:
+                obstacle.draw(screen, camera_y)
+            for ball in balls:
+                ball.draw(screen, camera_y)
+
+            # Draw countdown text
+            elapsed = pygame.time.get_ticks() - countdown_start_time
+            countdown_num = 3 - (elapsed // 1000)
+            if countdown_num > 0:
+                text = countdown_font.render(str(countdown_num), True, WHITE)
+                text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
+                screen.blit(text, text_rect)
+
+                # Draw the "Follow to join" text
+                follow_text = font.render("Follow if you want to join!", True, WHITE)
+                follow_rect = follow_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 6 + 100))
+                screen.blit(follow_text, follow_rect)
+
 
         elif game_state == "race" or game_state == "finishing":
             if finish_line_props.get('texture'):

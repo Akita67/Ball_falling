@@ -22,8 +22,8 @@ def get_map_layout():
     ramps.append(Ramp(SCREEN_WIDTH, 200, SCREEN_WIDTH - 120, 210))
     obstacles.append(Obstacle(160, 400, 20, 100, color=random.choice(color_palette)))
     obstacles.append(Obstacle(SCREEN_WIDTH - 180, 400, 20, 100, color=random.choice(color_palette)))
-    ramps.append(Ramp(0, 600, SCREEN_WIDTH / 2 - 40, 610))
-    ramps.append(Ramp(SCREEN_WIDTH, 600, SCREEN_WIDTH / 2 + 40, 610))
+    ramps.append(Ramp(0, 600, SCREEN_WIDTH / 2 - 80, 650))
+    ramps.append(Ramp(SCREEN_WIDTH, 600, SCREEN_WIDTH / 2 + 80, 650))
 
     y_start = 800
     for i in range(8):
@@ -64,10 +64,20 @@ def get_map_layout():
     ramps.append(Ramp(SCREEN_WIDTH, funnel_y, SCREEN_WIDTH / 2 + 80, funnel_y + 150))
     ramps.append(Ramp(SCREEN_WIDTH / 2 + 10, funnel_y + 200, SCREEN_WIDTH - 80, funnel_y + 350))
 
+
+    y_start = 4000
+    for row in range(12):
+        y_pos = y_start + row * 80
+        is_offset = row % 2 == 1
+        for col in range(int(SCREEN_WIDTH / 60)):
+            x_pos = col * 60 + (30 if is_offset else 0)
+            if random.random() > 0.15:
+                obstacles.append(Obstacle(x_pos, y_pos, 15, 15, color=random.choice(color_palette)))
+
     # --- NEW: The Convergence Bowl (Y: 4600 to 4800) ---
     # This section creates a large bowl with a hole in the middle.
-    bowl_top_y = 4600
-    bowl_bottom_y = 4800
+    bowl_top_y = 5200
+    bowl_bottom_y = 5400
     hole_width = 60
 
     # Left side of the bowl (built from several small ramps)
@@ -76,7 +86,7 @@ def get_map_layout():
         (0, bowl_top_y),
         (50, bowl_top_y + 100),
         (120, bowl_top_y + 170),
-        (180, bowl_top_y + 200),
+        (150, bowl_top_y + 200),
         (left_hole_x, bowl_bottom_y)
     ]
     for i in range(len(points_left) - 1):
@@ -88,7 +98,7 @@ def get_map_layout():
         (SCREEN_WIDTH, bowl_top_y),
         (SCREEN_WIDTH - 50, bowl_top_y + 100),
         (SCREEN_WIDTH - 120, bowl_top_y + 170),
-        (SCREEN_WIDTH - 180, bowl_top_y + 200),
+        (SCREEN_WIDTH - 150, bowl_top_y + 200),
         (right_hole_x, bowl_bottom_y)
     ]
     for i in range(len(points_right) - 1):
@@ -98,7 +108,7 @@ def get_map_layout():
     # Load the finish line texture and store its properties in a dictionary
     finish_line_texture = load_texture('finish_line.jpg')
     finish_line_data = {
-        'y': 5000,  # Positioned below the new bowl
+        'y': 5800,  # Positioned below the new bowl
         'height': 50,
         'texture': finish_line_texture
     }
