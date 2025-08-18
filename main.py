@@ -9,6 +9,7 @@ from ramp import Ramp
 from confetti import Confetti
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT, BLACK, WHITE, load_skins, load_texture
 from map import get_map_layout
+import subprocess
 
 # --- Recording Flag ---
 # Set this to True to record the next race to a video file.
@@ -67,7 +68,7 @@ def game_loop():
         print("Recording is disabled.")
 
     # --- Dynamic Background ---
-    background_img = load_texture('Nebula Blue.png')
+    background_img = load_texture('Nebula Aqua-Pink.png')
     stars_imgs = [
         load_texture('Stars Small_1.png'),
         load_texture('Stars Small_2.png'),
@@ -94,6 +95,12 @@ def game_loop():
     player_card_height = 150
     countdown_start_time = 0
     countdown_duration = 3000
+
+    # --- Load Intro Music ---
+    pygame.mixer.init()
+    pygame.mixer.music.load("assets/intro_music2.mp3")  # Adjust path as needed
+    pygame.mixer.music.set_volume(0.5)  # Optional: set volume
+    pygame.mixer.music.play(1)  # -1 means loop indefinitely
 
     # --- UI Elements ---
     restart_button_rect = pygame.Rect(SCREEN_WIDTH / 2 - 75, SCREEN_HEIGHT / 2 + 150, 150, 50)
@@ -160,6 +167,7 @@ def game_loop():
             elapsed_time = pygame.time.get_ticks() - countdown_start_time
             if elapsed_time >= countdown_duration:
                 game_state = "race"
+                pygame.mixer.music.stop()
 
         elif game_state == "race" or game_state == "finishing":
             for ball in balls:
@@ -221,6 +229,15 @@ def game_loop():
             for i, skin_info in enumerate(ball_skins):
                 card_x = intro_scroll_x + i * player_card_width
                 card_y = SCREEN_HEIGHT / 2 - player_card_height / 2
+                if(i%2==0):
+                    card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2)*(1.2)
+                if(i%3==0):
+                    card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2) * (1.4)
+                if (i%4==0):
+                    card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2) * (1.6)
+                if (i % 5 == 0):
+                    card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2) * (1.8)
+
                 icon = pygame.transform.scale(skin_info['surface'], (100, 100))
                 screen.blit(icon, icon.get_rect(center=(card_x + player_card_width / 2, card_y + 60)))
                 name_text = tiny_font.render(skin_info['username'], True, WHITE)
@@ -301,12 +318,18 @@ def game_loop():
             screen.blit(username_text, username_text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100)))
 
             if winner.skin:
-                winner_img = pygame.transform.scale(winner.skin, (200, 200))
+                winner_img = pygame.transform.smoothscale(winner.skin, (200, 200))
                 screen.blit(winner_img, winner_img.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 20)))
 
-            pygame.draw.rect(screen, (0, 150, 0), restart_button_rect, border_radius=10)
-            restart_text = font.render("Restart", True, WHITE)
-            screen.blit(restart_text, restart_text.get_rect(center=restart_button_rect.center))
+            elapsed_time = pygame.time.get_ticks()
+
+
+            if elapsed_time - (finish_delay + finish_time) > 15000:
+                break
+
+            # pygame.draw.rect(screen, (0, 150, 0), restart_button_rect, border_radius=10)
+            # restart_text = font.render("Restart", True, WHITE)
+            # screen.blit(restart_text, restart_text.get_rect(center=restart_button_rect.center))
 
         pygame.display.flip()
 
@@ -324,8 +347,22 @@ def game_loop():
     # --- Finalize and close video ---
     if RECORDING and video:
         print("Saving video... this may take a moment.")
-        video.close()
+        video.export(verbose=True)
+        # Merge intro MP3 with recorded MP4
+        print("Merging intro music with video...")
+        subprocess.run([
+            "ffmpeg",
+            "-y",
+            "-i", "race_recording.mp4",  # Video input
+            "-i", "assets/intro_music2.mp3",  # Audio input
+            "-c:v", "copy",  # Copy video stream without re-encoding
+            "-c:a", "aac",  # Encode audio to AAC
+            "-shortest",  # Trim to the shortest stream (video or audio)
+            "final_output.mp4"
+        ])
+
         print("Video saved as 'race_recording.mp4'")
+
 
     pygame.quit()
 

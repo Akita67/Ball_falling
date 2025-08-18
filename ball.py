@@ -53,7 +53,7 @@ class Ball:
         distance = math.hypot(dx, dy)
 
         if distance < self.radius + other_ball.radius and distance > 0:
-            for _ in range(random.randint(5, 15)):
+            for _ in range(random.randint(1, 5)):
                 particles.append(Particle((self.x + other_ball.x) / 2, (self.y + other_ball.y) / 2))
 
             nx, ny = dx / distance, dy / distance
