@@ -108,20 +108,30 @@ def game_loop():
 
     def start_race():
         """Initializes or resets all game objects for the race."""
-        nonlocal balls, particles, ramps, obstacles, finish_line_props, camera_y, winner, game_state, confetti_particles, ball_skins, intro_start_time, intro_scroll_x, finish_time
+        nonlocal balls, particles, ramps, obstacles, finish_line_props, camera_y, winner, game_state, confetti_particles, ball_skins, new_ball_skins, intro_start_time, intro_scroll_x, finish_time
 
-        ball_skins = load_skins()
+        ball_skins = load_skins() + load_skins("new_skins")
         if not ball_skins:
             print("\n--- No skins loaded. Running with default circles. ---")
 
+        new_ball_skins = load_skins("new_skins")
+        if not new_ball_skins:
+            print("\n--- No skins loaded. Running with default circles. ---")
+
         balls = []
-        from utils import NUM_BALLS, BALL_RADIUS
+        from utils import NUM_BALLS, BALL_RADIUS, NUM_NEW_BALLS
         for i in range(NUM_BALLS):
             x_pos = random.randint(BALL_RADIUS, SCREEN_WIDTH - BALL_RADIUS)
             # Balls now spawn in a tighter cluster at the top of the screen
             y_pos = random.randint(-SCREEN_HEIGHT // 4, -BALL_RADIUS * 2)
             skin_info = ball_skins[i % len(ball_skins)] if ball_skins else None
             balls.append(Ball(x_pos, y_pos, skin_info))
+        for i in range(NUM_NEW_BALLS):
+            x_pos = random.randint(BALL_RADIUS, SCREEN_WIDTH - BALL_RADIUS)
+            # Balls now spawn in a tighter cluster at the top of the screen
+            y_pos = random.randint(-SCREEN_HEIGHT // 4, -BALL_RADIUS * 2)
+            new_skin_info = new_ball_skins[i % len(new_ball_skins)] if new_ball_skins else None
+            balls.append(Ball(x_pos, y_pos, new_skin_info))
 
         particles = []
         ramps, obstacles, finish_line_props = get_map_layout()
@@ -134,7 +144,7 @@ def game_loop():
         intro_start_time = pygame.time.get_ticks()
         intro_scroll_x = SCREEN_WIDTH
 
-    balls, particles, ramps, obstacles, finish_line_props, camera_y, ball_skins = [], [], [], [], {}, 0.0, []
+    balls, particles, ramps, obstacles, finish_line_props, camera_y, ball_skins, new_ball_skins = [], [], [], [], {}, 0.0, [], []
     start_race()
 
     running = True
@@ -152,7 +162,7 @@ def game_loop():
         # --- Game Logic ---
         if game_state == "intro":
             elapsed_time = pygame.time.get_ticks() - intro_start_time
-            total_width = len(ball_skins) * player_card_width
+            total_width = len(new_ball_skins) * player_card_width
             start_pos = SCREEN_WIDTH
             end_pos = -total_width
 
@@ -223,25 +233,25 @@ def game_loop():
 
 
         if game_state == "intro":
-            title_text = title_font.render("The Competitors", True, WHITE)
+            title_text = title_font.render("New Competitors", True, WHITE)
             screen.blit(title_text, title_text.get_rect(center=(SCREEN_WIDTH / 2, 100)))
 
-            for i, skin_info in enumerate(ball_skins):
-                card_x = intro_scroll_x + i * player_card_width
-                card_y = SCREEN_HEIGHT / 2 - player_card_height / 2
-                if(i%2==0):
-                    card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2)*(1.2)
-                if(i%3==0):
-                    card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2) * (1.4)
-                if (i%4==0):
-                    card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2) * (1.6)
-                if (i % 5 == 0):
-                    card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2) * (1.8)
+            for i, new_skin_info in enumerate(new_ball_skins):
+                card_x = intro_scroll_x + i * player_card_width * 1.2
+                card_y = SCREEN_HEIGHT / 2 #- player_card_height / 2
+                # if(i%2==0):
+                #     card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2)*(1.2)
+                # if(i%3==0):
+                #     card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2) * (1.4)
+                # if (i%4==0):
+                #     card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2) * (1.6)
+                # if (i % 5 == 0):
+                #     card_y = (SCREEN_HEIGHT / 2 - player_card_height / 2) * (1.8)
 
-                icon = pygame.transform.scale(skin_info['surface'], (100, 100))
-                screen.blit(icon, icon.get_rect(center=(card_x + player_card_width / 2, card_y + 60)))
-                name_text = tiny_font.render(skin_info['username'], True, WHITE)
-                screen.blit(name_text, name_text.get_rect(center=(card_x + player_card_width / 2, card_y + 130)))
+                icon = pygame.transform.scale(new_skin_info['surface'], (100, 100))
+                screen.blit(icon, icon.get_rect(center=(card_x + player_card_width, card_y + 60)))
+                name_text = tiny_font.render(new_skin_info['username'], True, WHITE)
+                screen.blit(name_text, name_text.get_rect(center=(card_x + player_card_width , card_y + 130)))
 
             pygame.draw.rect(screen, (50, 50, 50), skip_button_rect, border_radius=10)
             skip_text = small_font.render("Skip", True, WHITE)

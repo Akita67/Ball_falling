@@ -20,6 +20,7 @@ GRAVITY = 0.13
 FRICTION = 0.85
 BALL_RADIUS = 15
 NUM_BALLS = len(os.listdir('skins'))
+NUM_NEW_BALLS = len(os.listdir('new_skins'))
 
 
 def load_texture(filename, folder='assets'):

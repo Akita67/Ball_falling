@@ -107,8 +107,7 @@ def get_map_layout():
     wall_thickness = 14
     cell_w = SCREEN_WIDTH / cols
 
-    #dead_end_col = random.randint(0, cols - 1)  # one unlucky column
-    dead_end_col = 2 # one unlucky column
+    dead_end_col = random.randint(0, cols - 1)  # one unlucky column
 
     for r in range(rows):
         y0 = maze_top_y + r * row_h
